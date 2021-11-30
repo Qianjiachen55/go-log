@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/Qianjiachen55/go-log/etcd"
 	"github.com/Qianjiachen55/go-log/kafka"
 	"github.com/Qianjiachen55/go-log/run"
 	"github.com/Qianjiachen55/go-log/tailfile"
@@ -16,17 +18,21 @@ import (
 type Config struct {
 	KafKaConfig `ini:"kafka"`
 	CollectConfig `ini:"collect"`
+	EtcdConfig `ini:"etcd"`
 }
 
 type KafKaConfig struct {
-	Address string	`ini:"address""`
-	Topic string `ini:"topic"`
+	Address string	`ini:"address"`
 	ChanSize int64 `ini:"chan_size"`
 }
 type CollectConfig struct {
 	LogFilePath string `ini:"logfile_path"`
 }
 
+type EtcdConfig struct {
+	Address string `ini:"address"`
+	CollectKey string `ini:"collect_key"`
+}
 
 
 func main()  {
@@ -50,8 +56,25 @@ func main()  {
 		return
 	}
 	logrus.Debug("init kafka success!")
+	// init etcd
+	err = etcd.Init([]string{configObj.EtcdConfig.Address})
+	if err != nil{
+		logrus.Error("init etcd error: ",err)
+		return
+	}
 
-	err = tailfile.Init(configObj.CollectConfig.LogFilePath)
+	// pull  config from etcd
+
+	allConf,err :=etcd.GetConf(configObj.EtcdConfig.CollectKey)
+	if err != nil{
+		logrus.Errorf("get conf from etcd failed: err : %v",err)
+	}
+	fmt.Println(allConf)
+
+	//watch etcd
+
+	go etcd.WatchConf(configObj.EtcdConfig.CollectKey)
+	err = tailfile.Init(allConf)
 	if err != nil{
 		logrus.Error("init tail file error: ",err)
 		return
@@ -59,10 +82,6 @@ func main()  {
 
 	logrus.Debug("init tailFile success!")
 
-	err = run.Run()
-	if err != nil{
-		logrus.Error("run failed err: ",err)
-		return
-	}
+	run.Run()
 
 }

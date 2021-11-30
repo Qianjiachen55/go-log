@@ -7,6 +7,7 @@ require (
 	github.com/hpcloud/tail v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
+	go.etcd.io/etcd/client/v3 v3.5.1 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/ini.v1 v1.64.0 // indirect
 )
