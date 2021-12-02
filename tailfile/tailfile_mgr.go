@@ -61,7 +61,21 @@ func (t *tailTaskMgr) watch() {
 
 			go tt.run()
 			//---//
+		}
 
+
+		for key,task := range t.tailTaskMap{
+			var found bool
+			for _,conf :=range newConf{
+				if key == conf.Path{
+					found = true
+					break
+				}
+			}
+			if !found{
+				delete(t.tailTaskMap,key)
+				task.cancel()
+			}
 		}
 	}
 
